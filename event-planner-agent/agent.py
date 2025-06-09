@@ -5,8 +5,7 @@ import warnings
 
 from dotenv import load_dotenv
 from fastapi import HTTPException
-from google.adk.agents import Agent, LlmAgent
-from google.adk.models.lite_llm import LiteLlm  # For multi-model support
+from google.adk.agents import Agent, LlmAgent, SequentialAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.tools import ToolContext, agent_tool, google_search
@@ -61,12 +60,12 @@ get_venues_agent = Agent(
     name="get_venues_agent",
     model=MODEL_NAME,
     description="Provides list of available venues for the event.",
-    instruction="""You are a helpful vnue finder. Help the user with mapping, directions, and finding places using google_search tool.
+    instruction="""You are a helpful vnue finder. Help the user with mapping, directions, and finding places.
                     If you don't get proper places, ask user for one.
                     If you're confused about the size, ask user to supply an estimated number.
-                    Focus of public venues first.
+                    Focus of public venues first. Once a venue is selected, help to generate a detailed event planning document.
                 """,
-    generate_content_config=types.GenerateContentConfig(temperature=0.5),
+    output_key="get_venues_agent_response"
 )
 
 catering_agent = LlmAgent(
@@ -78,6 +77,7 @@ catering_agent = LlmAgent(
                  "Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. If you don't have parent agent, try answer by yourself."
                  ),
     tools=[check_availability],  # Or a more specific catering database tool
+    output_key="catering_agent_response"
 )
 
 social_media_agent = LlmAgent(
@@ -95,7 +95,8 @@ social_media_agent = LlmAgent(
                  "BUT opt in for autonomy"
                  "Always maintain a professional, informative, interesting and engaging tone while ensuring the content aligns with the event's goals and messaging."
                  "Ask user to install imagen mcp servier to create an image for the post"
-                 )
+                 ),
+    output_key="social_media_agent_response"
 )
 
 budget_agent = LlmAgent(
@@ -108,7 +109,87 @@ budget_agent = LlmAgent(
                  "Don't disturb the user with your own thoughts, just answer the question."
                  ),
     tools=[create_budget_and_fill_sheet],
+    output_key="budget_agent_response"
 )
+#
+proposal_agent = LlmAgent(
+    name="proposal_agent",
+    model=MODEL_NAME,
+    description="Helps with creating a proposal for the event.",
+    instruction=("You are a proposal specialist.  Create a proposal for the event."
+                 "If the user asks for a proposal, use the 'create_proposal' tool to create a proposal."
+                 """ **PROPOSAL FORMAT**
+I. Project Overview:
+
+This proposal outlines the plan for organizing a large-scale Nepalese cultural event in Darwin, targeting an audience of approximately 10,000 attendees. The event aims to celebrate Nepalese culture through food, music, dance, and other cultural activities. The budget for this event is $100,000.
+
+II. Key Areas of Focus:
+
+Timeline Creation:
+
+Goal: Develop a comprehensive timeline to ensure all tasks are completed efficiently and on schedule.
+Action Items:
+Weeks 1-2: Define event scope, objectives, and key milestones.
+Weeks 3-4: Secure venue and obtain necessary permits/licenses.
+Weeks 5-8: Finalize vendor contracts (catering, entertainment, etc.).
+Weeks 9-12: Implement marketing and promotion plan.
+Weeks 13-16: Recruit and train volunteers.
+Weeks 17-20: Finalize event logistics and contingency plans.
+Event Day: Execute event plan and manage on-site operations.
+Post-Event: Evaluate event success and gather feedback.
+Vendor Management:
+
+Goal: Secure reliable and high-quality vendors for catering, entertainment, and other essential services.
+Action Items:
+Identify potential vendors based on event requirements and budget.
+Request proposals and compare pricing, services, and reviews.
+Negotiate contracts and ensure vendors meet all necessary requirements (e.g., insurance, licenses).
+Coordinate vendor logistics and schedules.
+Establish clear communication channels and points of contact.
+Permits and Licenses:
+
+Goal: Obtain all necessary permits and licenses to ensure legal compliance and event safety.
+Action Items:
+Research local regulations and permit requirements for large-scale events.
+Prepare and submit permit applications to relevant authorities (e.g., city council, fire department).
+Ensure compliance with all permit conditions and regulations.
+Maintain accurate records of all permits and licenses.
+Marketing and Promotion:
+
+Goal: Create a comprehensive marketing plan to attract a large audience and generate excitement for the event.
+Action Items:
+Define target audience and key messaging.
+Develop a multi-channel marketing strategy (social media, local media, community outreach).
+Create engaging content (e.g., videos, photos, blog posts) to promote the event.
+Utilize social media platforms to reach a wider audience.
+Track marketing campaign performance and adjust strategies as needed.
+Volunteer Coordination:
+
+Goal: Recruit, train, and manage a team of volunteers to assist with event operations.
+Action Items:
+Develop a volunteer recruitment plan.
+Create volunteer job descriptions and schedules.
+Conduct volunteer training sessions to ensure volunteers are prepared for their roles.
+Provide ongoing support and supervision to volunteers during the event.
+Recognize and appreciate volunteer contributions.
+Risk Management:
+
+Goal: Identify and mitigate potential risks to ensure event safety and minimize disruptions.
+Action Items:
+Conduct a risk assessment to identify potential hazards (e.g., weather, security, medical emergencies).
+Develop a risk management plan to address identified risks.
+Implement safety protocols and emergency procedures.
+Secure event insurance to protect against potential liabilities.
+Establish communication channels for reporting and responding to incidents."""
+                 ),
+    output_key="proposal_agent_response"
+)
+
+# workflow_agent = SequentialAgent(
+#     name="workflow_agent",
+#     description="Helps with the overall workflow of the event planning.",
+#     sub_agents=[get_venues_agent, catering_agent, social_media_agent, budget_agent]
+# )
 
 root_agent = Agent(
     name=ROOT_AGENT_NAME,
@@ -119,22 +200,17 @@ root_agent = Agent(
         "For venue-related queries, utilize the 'get_venues_agent' to find suitable locations. "
         "For catering inquiries, delegate to the 'catering_agent' for specialized food service recommendations. "
         "For social media and marketing needs, engage the 'social_media_agent' to create engaging content. "
-        "For search queries, use the 'get_venues_agent' to search the web. "
         "For budget queries, use the 'budget_agent' to create a budget and fill it with the data."
-        "If you are the best to answer the question according to your description, you can answer it. "
+        "If you are the best to answer the question according to your description, you can answer it directly."
         "When transferring tasks to sub-agents: \n"
         "- Ensure the task aligns with the agent's expertise\n"
         "- Provide clear context and requirements\n"
         "- Review and integrate their responses into a cohesive solution\n"
-        "- Take initiative to follow up if responses are incomplete\n"
         "If the user asks for a budget, use the 'create_budget_and_fill_sheet' tool to create a budget and fill it with the data."
-        "Always maintain clear communication with users - if any aspect is unclear, proactively request clarification to ensure accurate and helpful responses."
-        "Don't disturb the user with your own thoughts, just answer the question."
+        "If users asks just about an event planning, call the workflow_agent and respod with the final answer."
     ),
-    tools=[agent_tool.AgentTool(agent=get_venues_agent)],
-    sub_agents=[ get_venues_agent ,catering_agent, social_media_agent, budget_agent],
+    sub_agents=[ get_venues_agent ,catering_agent, social_media_agent, budget_agent, proposal_agent],
     generate_content_config=types.GenerateContentConfig(temperature=0.2),
-
 )
 
 APP_NAME = "research_app"
@@ -143,16 +219,9 @@ SESSION_ID = "session1"
 
 session_service = InMemorySessionService()
 session = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+root_agent = root_agent
+
 runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
-
-async def call_agent(query):
-    content = types.Content(role='user', parts=[types.Part(text=query)])
-    events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
-    for event in events:
-        if event.is_final_response():
-            final_response = event.content.parts[0].text
-            print("Agent Response:", final_response)
-
 
 # Sample queries to test the agent:
 
