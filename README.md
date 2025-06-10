@@ -1,6 +1,6 @@
 # Build an Event Planner Agent with Google ADK (Python)
 
-id: event-planner-adk-python
+id: codelab-event-planner-adk
 summary: Build an interactive Event Planner Agent using Google ADK (Python)
 authors: Yuba Raj (UV) Panta
 categories: AI, Bot Development

@@ -3,8 +3,8 @@
   "format": "html",
   "prefix": "https://storage.googleapis.com",
   "mainga": "UA-49880327-14",
-  "updated": "2025-06-10T02:34:49+10:00",
-  "id": "event-planner-adk-python",
+  "updated": "2025-06-10T14:56:07+10:00",
+  "id": "codelab-event-planner-adk",
   "duration": 3,
   "title": "Build an Event Planner Agent with Google ADK (Python)",
   "authors": "Yuba Raj (UV) Panta",
@@ -23,5 +23,5 @@
     "python",
     "virtualenv"
   ],
-  "url": "event-planner-adk-python"
+  "url": "codelab-event-planner-adk"
 }
