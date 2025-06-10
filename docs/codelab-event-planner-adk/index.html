@@ -100,7 +100,7 @@
 
       </google-codelab-step>
     
-      <google-codelab-step label="Step 1: Explore the AI studio" duration="1">
+      <google-codelab-step label="Explore the AI studio" duration="0">
         <pre><code language="language-bash" class="language-bash"># Clone the repository
 git clone https://github.com/uvishere/event-planner-adk.git
 cd event-planner-adk
@@ -110,7 +110,7 @@ cd event-planner-adk
 
       </google-codelab-step>
     
-      <google-codelab-step label="Step 2: Set up the Python Environment" duration="0">
+      <google-codelab-step label="Set up the Python Environment" duration="0">
         <ol type="1">
 <li><strong>Create and activate a virtual environment:</strong><pre><code language="language-bash" class="language-bash">python3 -m venv venv
 source venv/bin/activate
@@ -146,7 +146,7 @@ GOOGLE_MAPS_API_KEY=YOUR_MAPS_API_KEY  # optional, for venue tools
 
       </google-codelab-step>
     
-      <google-codelab-step label="Step 3: Explore the Code Structure" duration="0">
+      <google-codelab-step label="Explore the Code Structure" duration="0">
         <p>Open <code>event-planner-agent/agent.py</code> in your editor. Key components:</p>
 <ul>
 <li><strong>Tool implementations</strong> (mock examples):<ul>
@@ -175,7 +175,7 @@ GOOGLE_MAPS_API_KEY=YOUR_MAPS_API_KEY  # optional, for venue tools
 
       </google-codelab-step>
     
-      <google-codelab-step label="Step 4: Add a Test Harness" duration="0">
+      <google-codelab-step label="Add a Test Harness" duration="0">
         <p>Although <code>agent.py</code> includes a <code>call_agent</code> coroutine, you can add a simple test script <code>test_agent.py</code> in the <code>event-planner-agent/</code> directory:</p>
 <pre><code language="language-python" class="language-python"># event-planner-agent/test_agent.py
 import asyncio
@@ -195,7 +195,7 @@ if __name__ == &#34;__main__&#34;:
 
       </google-codelab-step>
     
-      <google-codelab-step label="Step 5: Deploy the Agent on cloud Run" duration="1">
+      <google-codelab-step label="Deploy the Agent on cloud Run" duration="0">
         <p>Setup environment variables</p>
 <pre><code language="language-bash" class="language-bash">   export $GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT_ID
    export $GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION
@@ -217,15 +217,15 @@ $AGENT_PATH
 
       </google-codelab-step>
     
-      <google-codelab-step label="Step 6: Exercises and Next Steps" duration="0">
-        <ul>
+      <google-codelab-step label="Congratulations" duration="0">
+        <p>Congratulations—your Event Planner Agent is up and running! 🎉</p>
+<ul>
 <li><strong>Add a </strong><strong><code>delete_event</code></strong><strong> tool</strong> to remove events from storage.</li>
-<li><strong>Integrate real Firestore storage</strong> instead of mock implementations.</li>
+<li><strong>Integrate real Firestore storage</strong> instead of mock implementations for budet spreadsheets.</li>
 <li><strong>Enhance </strong><strong><code>social_media_agent</code></strong> to generate images via MCPTool.</li>
-<li><strong>Connect to Google Calendar API</strong> for live event creation.</li>
+<li><strong>Integrate </strong><strong><code>email</code></strong><strong> tool</strong> to email your members/volunteers.</li>
 </ul>
 <p>Feel free to file issues or submit PRs: <a href="https://github.com/uvishere/event-planner-adk/issues/new" target="_blank">https://github.com/uvishere/event-planner-adk/issues/new</a></p>
-<p>Congratulations—your Event Planner Agent is up and running with ADK in Python! 🎉</p>
 
 
       </google-codelab-step>

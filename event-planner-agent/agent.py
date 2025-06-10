@@ -208,6 +208,7 @@ root_agent = Agent(
         "- Review and integrate their responses into a cohesive solution\n"
         "If the user asks for a budget, use the 'create_budget_and_fill_sheet' tool to create a budget and fill it with the data."
         "If users asks just about an event planning, call the workflow_agent and respod with the final answer."
+        "By adhering to this system prompt, you will provide users with a complete, well-structured, and highly useful event plan that showcases the capabilities of a multi-agent AI system."
     ),
     sub_agents=[ get_venues_agent ,catering_agent, social_media_agent, budget_agent, proposal_agent],
     generate_content_config=types.GenerateContentConfig(temperature=0.2),
