@@ -194,4 +194,4 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-event-planner-adk-python/*
+# event-planner-adk-python/*

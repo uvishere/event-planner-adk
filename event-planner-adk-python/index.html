@@ -1,0 +1,242 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Build an Event Planner Agent with Google ADK (Python)</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14" ga4id=""></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  codelab-ga4id=""
+                  id="event-planner-adk-python"
+                  title="Build an Event Planner Agent with Google ADK (Python)"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Overview" duration="1">
+        <p>Getting started with AI often means asking yourself, &#34;Can a model really tackle the challenge on my mind?&#34; That&#39;s exactly where Google AI Studio shines—letting you spin up quick experiments whenever inspiration strikes. Imagine you&#39;re organizing a big conference and need help lining up venues, catering, budgets and marketing—but you&#39;re not an event planner by trade. You might not even know the right questions to ask. So first, you hand that problem to Gemini: have it draft the perfect, detailed prompt; turn that into a complete event plan; even produce a mock-up of the venue layout.</p>
+<p>Great—but how do you turn these one-off prompts into a repeatable, end-to-end service your company can use? Enter <strong>Agents</strong>.</p>
+<p>An <strong>agent</strong> is a self-directed program that interacts with an AI model, leverages available tools and context, and makes decisions autonomously to achieve a specific goal.</p>
+<p>But how to build these agents?</p>
+<h2 is-upgraded>The Agent Development Kit (ADK)</h2>
+<p>The <strong>Agent Development Kit</strong> is a modular framework for building and deploying AI agents. With ADK you can break a complex workflow into multiple specialized agents—each responsible for a piece of the puzzle—and then compose them into a <strong>Multi-Agent System (MAS)</strong> that collaborates to reach a bigger objective.</p>
+<p>Structuring your solution as a MAS brings clear benefits:</p>
+<ul>
+<li><strong>Modularity &amp; Specialization:</strong> Each agent focuses on a single domain (e.g., venue selection, budgeting, marketing).</li>
+<li><strong>Reusability:</strong> Swap or upgrade individual agents without overhauling the entire system.</li>
+<li><strong>Maintainability:</strong> Smaller, well-defined components are easier to test and debug.</li>
+<li><strong>Controlled Workflows:</strong> Use dedicated &#34;orchestrator&#34; agents to manage the sequence of steps and decision logic.</li>
+</ul>
+<h2 is-upgraded>What You&#39;ll Build</h2>
+<p>In this codelab, you&#39;ll transform our prompt-centric prototype into a fully fledged agent: one that generates a polished <strong>Event Proposal Document</strong> for your conference. You&#39;ll learn how to:</p>
+<ol type="1">
+<li><strong>Implement</strong> a basic ADK agent that collects requirements and drafts the proposal.</li>
+<li><strong>Persist</strong> the generated document to a Google Cloud Storage bucket.</li>
+<li><strong>Run</strong> and <strong>test</strong> your agent both locally (Cloud Shell) and via a simple web endpoint.</li>
+</ol>
+<h2 is-upgraded>Requirements</h2>
+<ul>
+<li>A modern browser (Chrome, Firefox, etc.)</li>
+<li>A Google Cloud project with billing enabled</li>
+<li>Python 3.10+ and virtualenv (or your preferred env tool)</li>
+<li>A cup of coffee (or beer), you choose!</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Before you Begin" duration="0">
+        <h2 is-upgraded><strong>Create a Google Cloud Project</strong></h2>
+<p>Jump to <strong>step 4</strong> if you&#39;ve already created a project and setup the billing/credits.</p>
+<ol type="1">
+<li><strong>Select or create a project</strong><ul>
+<li>In the Google Cloud Console, go to the project selector and either pick an existing project or click <strong>New Project</strong> to make one.</li>
+</ul>
+</li>
+<li><strong>Enable billing</strong><ul>
+<li>Ensure your project has billing turned on. You can verify this under <strong>Billing → Overview</strong>. If it isn&#39;t enabled, follow the steps in the Cloud Console to attach a billing account.</li>
+</ul>
+</li>
+<li><strong>Redeem free credits (optional)</strong><ul>
+<li>If you&#39;d like some starter credits for Google Cloud and ADK, contact the organisers. Follow the on-screen instructions to apply the credit to your project.</li>
+</ul>
+</li>
+<li><strong>Open Cloud Shell</strong><ul>
+<li>Click the &#34;Activate Cloud Shell&#34; button in the Console (or use this direct link).</li>
+<li>In Cloud Shell you can switch between the <strong>Terminal</strong> (for <code>gcloud</code> commands) and the <strong>Editor</strong> (for editing files) using the buttons at the top of the Cloud Shell window.</li>
+</ul>
+</li>
+<li><strong>Confirm authentication and project</strong><ul>
+<li>Run <code>gcloud auth list</code> to see your logged-in accounts.</li>
+<li>Run <code>gcloud config list project</code> to check which project is active.</li>
+<li>If it&#39;s not set to your desired project, run: <code>gcloud config set project YOUR_PROJECT_ID</code></li>
+</ul>
+</li>
+<li><strong>Verify Python version</strong><ul>
+<li>Make sure you have <strong>Python 3.9+</strong> installed in your Cloud Shell environment (or locally, if you&#39;re developing on your machine).</li>
+</ul>
+</li>
+<li><strong>Further reading</strong><ul>
+<li>For additional details on <code>gcloud</code> commands and usage, see the <a href="https://cloud.google.com/sdk/docs" target="_blank">Cloud SDK documentation</a>.</li>
+</ul>
+</li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 1: Explore the AI studio" duration="1">
+        <pre><code language="language-bash" class="language-bash"># Clone the repository
+git clone https://github.com/uvishere/event-planner-adk.git
+cd event-planner-adk
+</code></pre>
+<p>The main agent implementation is in <code>event-planner-agent/agent.py</code>.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2: Set up the Python Environment" duration="0">
+        <ol type="1">
+<li><strong>Create and activate a virtual environment:</strong><pre><code language="language-bash" class="language-bash">python3 -m venv venv
+source venv/bin/activate
+</code></pre>
+</li>
+<li><strong>Install dependencies:</strong><pre><code language="language-bash" class="language-bash">pip install google-adk 
+</code></pre>
+</li>
+<li>Create necesary files and folders Create the following folder structure:<pre><code language="language-md" class="language-md">event-planner-adk/  # Project folder
+└── event-planner-agent/ # Agent folder
+   ├── __init__.py # Python package
+   └── agent.py # Agent definition
+   └── .env # environment file
+</code></pre>
+</li>
+</ol>
+<p>Create and go inside the directory: <code>mkdir event-planner-agent && cd event-planner-agent</code></p>
+<p>create followign empty files</p>
+<p><code>touch __init__.py agent.py .env</code></p>
+<ol type="1">
+<li><strong>Create a </strong><strong><code>.env</code></strong><strong> file in the project root and populate it:</strong><pre><code language="language-text" class="language-text">GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
+GOOGLE_CLOUD_PROJECT_ID=YOUR_PROJECT_ID
+GOOGLE_CLOUD_LOCATION=YOUR_LOCATION  # e.g. us-central1
+GOOGLE_GENAI_USE_VERTEXAI=true
+GOOGLE_MAPS_API_KEY=YOUR_MAPS_API_KEY  # optional, for venue tools
+</code></pre>
+</li>
+<li><strong>Load environment variables:</strong><pre><code language="language-bash" class="language-bash">source .env
+</code></pre>
+</li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 3: Explore the Code Structure" duration="0">
+        <p>Open <code>event-planner-agent/agent.py</code> in your editor. Key components:</p>
+<ul>
+<li><strong>Tool implementations</strong> (mock examples):<ul>
+<li><code>check_availability(venue_name, date)</code> – checks venue availability (mocked).</li>
+<li><code>create_budget_and_fill_sheet(budget_data, spreadsheet_name)</code> – mocks budget creation and returns a spreadsheet URL.</li>
+</ul>
+</li>
+<li><strong>Sub-agents:</strong><ul>
+<li><code>get_venues_agent</code> – an <code>Agent</code> that uses <code>check_availability</code> and web search for venues.</li>
+<li><code>catering_agent</code> – an <code>LlmAgent</code> for catering recommendations.</li>
+<li><code>social_media_agent</code> – an <code>LlmAgent</code> to craft social media posts.</li>
+<li><code>budget_agent</code> – an <code>LlmAgent</code> that calls <code>create_budget_and_fill_sheet</code>.</li>
+</ul>
+</li>
+<li><strong>Root agent:</strong><ul>
+<li><code>root_agent</code> – an <code>Agent</code> with all sub-agents registered, delegating tasks based on user requests.</li>
+</ul>
+</li>
+<li><strong>Runner and sessions:</strong><ul>
+<li><code>InMemorySessionService</code>, <code>Runner</code>, and <code>call_agent(query)</code> function for testing.</li>
+</ul>
+</li>
+</ul>
+<p>Take a moment to read through the intent instructions and tool wiring in the code.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 4: Add a Test Harness" duration="0">
+        <p>Although <code>agent.py</code> includes a <code>call_agent</code> coroutine, you can add a simple test script <code>test_agent.py</code> in the <code>event-planner-agent/</code> directory:</p>
+<pre><code language="language-python" class="language-python"># event-planner-agent/test_agent.py
+import asyncio
+from dotenv import load_dotenv
+from agent import call_agent
+
+if __name__ == &#34;__main__&#34;:
+    load_dotenv()
+    # Example: Create an event
+    asyncio.run(call_agent(&#34;Schedule an event at Darwin Waterfront on 2025-06-15&#34;))
+</code></pre>
+<p>Run it:</p>
+<pre><code language="language-bash" class="language-bash">python event-planner-agent/test_agent.py
+</code></pre>
+<p>Observe console output for the agent&#39;s response.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 5: Deploy the Agent on cloud Run" duration="1">
+        <p>Setup environment variables</p>
+<pre><code language="language-bash" class="language-bash">   export $GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT_ID
+   export $GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION
+   export $SERVICE_NAME=event-planner-agent
+   export $APP_NAME=event-planner-agent
+   export $AGENT_PATH=./event-planner-agent
+</code></pre>
+<p>Run the following command to deploy</p>
+<pre><code language="language-bash" class="language-bash">adk deploy cloud_run \
+--project=$GOOGLE_CLOUD_PROJECT \
+--region=$GOOGLE_CLOUD_LOCATION \
+--service_name=$SERVICE_NAME \
+--app_name=$APP_NAME \
+--with_ui \
+$AGENT_PATH
+</code></pre>
+<p>Now just wait for few minutes as</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 6: Exercises and Next Steps" duration="0">
+        <ul>
+<li><strong>Add a </strong><strong><code>delete_event</code></strong><strong> tool</strong> to remove events from storage.</li>
+<li><strong>Integrate real Firestore storage</strong> instead of mock implementations.</li>
+<li><strong>Enhance </strong><strong><code>social_media_agent</code></strong> to generate images via MCPTool.</li>
+<li><strong>Connect to Google Calendar API</strong> for live event creation.</li>
+</ul>
+<p>Feel free to file issues or submit PRs: <a href="https://github.com/uvishere/event-planner-adk/issues/new" target="_blank">https://github.com/uvishere/event-planner-adk/issues/new</a></p>
+<p>Congratulations—your Event Planner Agent is up and running with ADK in Python! 🎉</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

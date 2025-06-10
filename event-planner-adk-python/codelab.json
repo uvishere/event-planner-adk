@@ -1,0 +1,27 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2025-06-10T02:34:49+10:00",
+  "id": "event-planner-adk-python",
+  "duration": 3,
+  "title": "Build an Event Planner Agent with Google ADK (Python)",
+  "authors": "Yuba Raj (UV) Panta",
+  "summary": "Build an interactive Event Planner Agent using Google ADK (Python)",
+  "source": "README.md",
+  "theme": "",
+  "status": [
+    "draft"
+  ],
+  "category": [
+    "ai",
+    "botdevelopment"
+  ],
+  "tags": [
+    "googlecloud",
+    "python",
+    "virtualenv"
+  ],
+  "url": "event-planner-adk-python"
+}
