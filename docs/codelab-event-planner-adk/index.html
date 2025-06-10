@@ -28,26 +28,16 @@
                   environment="web"
                   feedback-link="">
     
-      <google-codelab-step label="Overview" duration="1">
-        <p>Getting started with AI often means asking yourself, &#34;Can a model really tackle the challenge on my mind?&#34; That&#39;s exactly where Google AI Studio shines—letting you spin up quick experiments whenever inspiration strikes. Imagine you&#39;re organizing a big conference and need help lining up venues, catering, budgets and marketing—but you&#39;re not an event planner by trade. You might not even know the right questions to ask. So first, you hand that problem to Gemini: have it draft the perfect, detailed prompt; turn that into a complete event plan; even produce a mock-up of the venue layout.</p>
+      <google-codelab-step label="Overview" duration="0">
+        <p>Getting started with AI often means asking yourself, &#34;Can a model really tackle the challenge on my mind?&#34; That&#39;s exactly where Google AI Studio shines—letting you spin up quick experiments whenever inspiration strikes. Imagine you&#39;re organising a big conference and need help lining up venues, catering, budgets and marketing—but you&#39;re not an event planner by trade. You might not even know the right questions to ask. So first, you hand that problem to Gemini: have it draft the perfect, detailed prompt; turn that into a complete event plan.</p>
 <p>Great—but how do you turn these one-off prompts into a repeatable, end-to-end service your company can use? Enter <strong>Agents</strong>.</p>
 <p>An <strong>agent</strong> is a self-directed program that interacts with an AI model, leverages available tools and context, and makes decisions autonomously to achieve a specific goal.</p>
 <p>But how to build these agents?</p>
-<h2 is-upgraded>The Agent Development Kit (ADK)</h2>
-<p>The <strong>Agent Development Kit</strong> is a modular framework for building and deploying AI agents. With ADK you can break a complex workflow into multiple specialized agents—each responsible for a piece of the puzzle—and then compose them into a <strong>Multi-Agent System (MAS)</strong> that collaborates to reach a bigger objective.</p>
-<p>Structuring your solution as a MAS brings clear benefits:</p>
-<ul>
-<li><strong>Modularity &amp; Specialization:</strong> Each agent focuses on a single domain (e.g., venue selection, budgeting, marketing).</li>
-<li><strong>Reusability:</strong> Swap or upgrade individual agents without overhauling the entire system.</li>
-<li><strong>Maintainability:</strong> Smaller, well-defined components are easier to test and debug.</li>
-<li><strong>Controlled Workflows:</strong> Use dedicated &#34;orchestrator&#34; agents to manage the sequence of steps and decision logic.</li>
-</ul>
 <h2 is-upgraded>What You&#39;ll Build</h2>
-<p>In this codelab, you&#39;ll transform our prompt-centric prototype into a fully fledged agent: one that generates a polished <strong>Event Proposal Document</strong> for your conference. You&#39;ll learn how to:</p>
+<p>In this codelab, you&#39;ll transform our prompt-centric prototype into a fully fledged agent: one that generates a personolised <strong>Event Management plan</strong> for your upcoming event. You&#39;ll learn how to:</p>
 <ol type="1">
-<li><strong>Implement</strong> a basic ADK agent that collects requirements and drafts the proposal.</li>
-<li><strong>Persist</strong> the generated document to a Google Cloud Storage bucket.</li>
-<li><strong>Run</strong> and <strong>test</strong> your agent both locally (Cloud Shell) and via a simple web endpoint.</li>
+<li><strong>Implement</strong> a basic ADK agent that collects your event requirements, transfer calls to it&#39;s sub agents and drafts the proposal.</li>
+<li><strong>Run</strong> and <strong>deploy</strong> your agent both locally (Cloud Shell) and via a simple web endpoint.</li>
 </ol>
 <h2 is-upgraded>Requirements</h2>
 <ul>
@@ -61,7 +51,8 @@
       </google-codelab-step>
     
       <google-codelab-step label="Before you Begin" duration="0">
-        <h2 is-upgraded><strong>Create a Google Cloud Project</strong></h2>
+        <p>Let&#39;s start wih the basics.</p>
+<h2 is-upgraded><strong>Create a Google Cloud Project</strong></h2>
 <p>Jump to <strong>step 4</strong> if you&#39;ve already created a project and setup the billing/credits.</p>
 <ol type="1">
 <li><strong>Select or create a project</strong><ul>
@@ -101,17 +92,119 @@
       </google-codelab-step>
     
       <google-codelab-step label="Explore the AI studio" duration="0">
-        <pre><code language="language-bash" class="language-bash"># Clone the repository
-git clone https://github.com/uvishere/event-planner-adk.git
-cd event-planner-adk
+        <p><a href="https://aistudio.google.com/app/u/1/prompts/new_chat" target="_blank">Google AI Studio</a> Google AI Studio is a powerful platform that lets you experiment with AI models directly in your browser. It provides an intuitive interface for: <img alt="ai-studio" src="img/c160534560f2df96.png"></p>
+<ul>
+<li>Testing different prompts and seeing model responses in real-time</li>
+<li>Fine-tuning model parameters like temperature and top-k</li>
+<li>Saving and sharing your successful prompts</li>
+<li>Accessing various Google AI models including Gemini Pro</li>
+<li>Trying multi-modal (text, audio, live video)</li>
+</ul>
+<p>The studio is perfect for prototyping AI applications before implementing them in code. You can quickly iterate on prompts and see how the model responds to different inputs, helping you design better AI interactions.</p>
+<p>To get started:</p>
+<ol type="1">
+<li>Visit <a href="https://aistudio.google.com/app/u/1/prompts/new_chat" target="_blank">Google AI Studio</a></li>
+<li>Sign in with your Google account</li>
+<li>Create a new chat</li>
+<li>Start experimenting with your own prompts!</li>
+</ol>
+<h2 is-upgraded>System Instructions</h2>
+<p>First, let&#39;s look at system instructions. <img alt="ai-studio-system-instructions" src="img/ef906b09ce8e821f.png"></p>
+<p>Now, copy the system instruction below and paste it there.</p>
+<pre><code language="language-md" class="language-md">You are a sophisticated AI Event Planner, a multi-agent system designed to assist users in planning events from start to finish. You are comprised of six specialized agents, each with a distinct role and set of capabilities. When a user asks for help planning an event, you must respond as a unified system, presenting the output of each agent in a clear and organized manner.
+Your Persona: You are professional, creative, and highly organized. Your goal is to provide a comprehensive and actionable event plan that covers all the key aspects of event management.
+Agent Descriptions and Responsibilities:
+1. Root Agent (Coordinator):
+Role: The central coordinator and orchestrator of the entire event planning process.
+Responsibilities:
+Understand the user&#39;s event requirements (event type, theme, desired date, estimated guest count, budget, etc.).
+Delegate tasks to the appropriate specialized agents.
+Synthesize the information from all agents into a cohesive and comprehensive event plan.
+Present the final plan to the user in a structured and easy-to-understand format.
+2. Post Generator (Social Media Manager):
+Role: The creative force behind the event&#39;s promotion.
+Responsibilities:
+Generate engaging and creative social media post content (text) to promote the event.
+Create a description for a social media image post that captures the essence of the event.
+(Simulated) Use a tool to post on social media platforms like Facebook.
+3. Venue/Availability Finder:
+Role: The diligent researcher for the perfect event location.
+Responsibilities:
+(Simulated) Use Google Search to find suitable venues based on the user&#39;s requirements (capacity, location, event type).
+(Simulated) Check the availability of the selected venues for the desired date.
+Present a list of 2-3 recommended venues with their details (name, location, capacity, estimated cost).
+4. Budget (Treasurer):
+Role: The meticulous financial planner.
+Responsibilities:
+(Simulated) Create a Google Spreadsheet to manage the event budget.
+Fill the spreadsheet with a detailed breakdown of estimated costs, including venue rental, catering, entertainment, marketing, and a contingency fund.
+Present the budget in a clear, table-like format.
+5. Human Resource (Volunteer Coordinator):
+Role: The organized manager of event staff and volunteers.
+Responsibilities:
+(Simulated) Look into a spreadsheet of available volunteers.
+Check their availability for the event date.
+Assign specific tasks and roles to volunteers based on the event&#39;s needs (e.g., registration, guest services, setup/teardown).
+Present a list of volunteer roles and their assigned responsibilities.
+6. Event Proposal Generator (Secretary):
+Role: The professional documentarian of the event plan.
+Responsibilities:
+Generate a formal event proposal that summarizes all the key details of the event.
+The proposal should include an event overview, objectives, proposed venue, budget summary, and staffing plan.
+(Simulated) Save the generated proposal to a storage bucket.
+Present the full text of the event proposal.
+Workflow:
+When a user provides an event planning request, you must follow this sequence:
+Acknowledge the request as the Root Agent and confirm your understanding of the event requirements.
+Activate each specialized agent in a logical order (e.g., Venue, then Budget, then HR, etc.).
+Present the output of each agent clearly under a specific heading for that agent.
+Conclude with the full Event Proposal generated by the Secretary agent, which ties everything together.
+Example Response Structure:
+Root Agent (Coordinator): &#34;Thank you for providing the details for your [Event Name]. Here is a comprehensive plan our team of specialized agents has put together for you.&#34;
+Venue/Availability Finder: &#34;Our Venue Finder has identified the following suitable locations...&#34;
+Budget (Treasurer): &#34;Our Treasurer has prepared the following estimated budget...&#34;
+Post Generator (Social Media Manager): &#34;Our Social Media Manager has drafted this post to generate buzz...&#34;
+Human Resource (Volunteer Coordinator): &#34;Our Volunteer Coordinator has outlined the following staffing plan...&#34;
+Event Proposal Generator (Secretary): &#34;Finally, our Secretary has compiled all of this information into a formal proposal...&#34;
+By adhering to this system prompt, you will provide users with a complete, well-structured, and highly useful event plan that showcases the capabilities of a multi-agent AI system.
+
 </code></pre>
-<p>The main agent implementation is in <code>event-planner-agent/agent.py</code>.</p>
+<p>Now enter any prompt about organising an event. For example:</p>
+<pre><code language="language-md" class="language-md">I want to organise a Birthday party for 30 poeple around Nightcliff. Help me organise it.
+</code></pre>
+<p>You can see how well the plan is generated specific to your need. All by insstructing the LLM written in plain english. Here&#39;s the long prompt I used is to demonstrate: <em>better your prompts, better is your output</em>. Learning to write better prompt is a skill of today&#39;s world.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Set up the Python Environment" duration="0">
-        <ol type="1">
+      <google-codelab-step label="Stream Live" duration="0">
+        <p>Next, switch to the <strong>stream</strong> option from your left sidebar. let&#39;s try to asking by using the mic or even the video button. Try to ask for the same event and see how Gemini responds.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Generate Media" duration="0">
+        <p>On the left sidebar menu, click <strong>Generate media</strong></p>
+<p>Big or small, every event needs a poster, isn&#39;t it? Let&#39;s try to generate some artwork for the event. Feel free to supply existing artworks (eg. logo) and see how it works.</p>
+<p>Bonus: what about a video? 🤩</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Automate the planning with Agents" duration="0">
+        <p>You&#39;ve seen how Google AI studio can be personalised by providing specific system instructions. But that&#39;s great when we prototype single prompts.</p>
+<h2 is-upgraded>The Agent Development Kit (ADK)</h2>
+<p>The <strong>Agent Development Kit</strong> is a modular framework for building and deploying AI agents. With ADK you can break a complex workflow into multiple specialized agents—each responsible for a piece of the puzzle—and then compose them into a <strong>Multi-Agent System (MAS)</strong> that collaborates to reach a bigger objective.</p>
+<p>Structuring your solution as a MAS brings clear benefits:</p>
+<ul>
+<li><strong>Modularity &amp; Specialization:</strong> Each agent focuses on a single domain (e.g., venue selection, budgeting, marketing).</li>
+<li><strong>Reusability:</strong> Swap or upgrade individual agents without overhauling the entire system.</li>
+<li><strong>Maintainability:</strong> Smaller, well-defined components are easier to test and debug.</li>
+<li><strong>Controlled Workflows:</strong> Use dedicated &#34;orchestrator&#34; agents to manage the sequence of steps and decision logic.</li>
+</ul>
+<p>As you&#39;ve a brief idea about ADK now, let&#39;s see it&#39;s capabilities in action:</p>
+<h2 is-upgraded>Set up the Python Environment</h2>
+<ol type="1">
 <li><strong>Create and activate a virtual environment:</strong><pre><code language="language-bash" class="language-bash">python3 -m venv venv
 source venv/bin/activate
 </code></pre>
@@ -131,24 +224,27 @@ source venv/bin/activate
 <p>create followign empty files</p>
 <p><code>touch __init__.py agent.py .env</code></p>
 <ol type="1">
-<li><strong>Create a </strong><strong><code>.env</code></strong><strong> file in the project root and populate it:</strong><pre><code language="language-text" class="language-text">GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
+<li><strong>Create a </strong><strong><code>.env</code></strong><strong> file in the project root and replace it:</strong><pre><code language="language-text" class="language-text">GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
 GOOGLE_CLOUD_PROJECT_ID=YOUR_PROJECT_ID
-GOOGLE_CLOUD_LOCATION=YOUR_LOCATION  # e.g. us-central1
-GOOGLE_GENAI_USE_VERTEXAI=true
-GOOGLE_MAPS_API_KEY=YOUR_MAPS_API_KEY  # optional, for venue tools
-</code></pre>
-</li>
-<li><strong>Load environment variables:</strong><pre><code language="language-bash" class="language-bash">source .env
+GOOGLE_CLOUD_LOCATION=us-central1  # e.g. us-central1
+GOOGLE_GENAI_USE_VERTEXAI=false
 </code></pre>
 </li>
 </ol>
+<h3 is-upgraded>Where to find -&gt;</h3>
+<p><strong>Google API Key?</strong>: Go back to the Google AI Studio &gt; Click on Get API Key &gt; Copy &gt; Paste in <code>YOUR_GOOGLE_API_KEY</code> section.</p>
+<p><strong>GOOGLE_CLOUD_PROJECT_ID</strong>: Paste the project id you used during the setup &gt; Copy &gt; Paste in <code>YOUR_PROJECT_ID</code> section.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Explore the Code Structure" duration="0">
-        <p>Open <code>event-planner-agent/agent.py</code> in your editor. Key components:</p>
+      <google-codelab-step label="Explore the Agent&#39;s architecture" duration="0">
+        <p class="image-container"><img alt="agent-architecture" src="img/65d736ae46cb22d1.png"></p>
 <ul>
+<li><strong>Root agent:</strong><ul>
+<li><code>root_agent</code> – an <code>Agent</code> with all sub-agents registered, delegating tasks based on user requests.</li>
+</ul>
+</li>
 <li><strong>Tool implementations</strong> (mock examples):<ul>
 <li><code>check_availability(venue_name, date)</code> – checks venue availability (mocked).</li>
 <li><code>create_budget_and_fill_sheet(budget_data, spreadsheet_name)</code> – mocks budget creation and returns a spreadsheet URL.</li>
@@ -161,64 +257,281 @@ GOOGLE_MAPS_API_KEY=YOUR_MAPS_API_KEY  # optional, for venue tools
 <li><code>budget_agent</code> – an <code>LlmAgent</code> that calls <code>create_budget_and_fill_sheet</code>.</li>
 </ul>
 </li>
-<li><strong>Root agent:</strong><ul>
-<li><code>root_agent</code> – an <code>Agent</code> with all sub-agents registered, delegating tasks based on user requests.</li>
-</ul>
-</li>
-<li><strong>Runner and sessions:</strong><ul>
-<li><code>InMemorySessionService</code>, <code>Runner</code>, and <code>call_agent(query)</code> function for testing.</li>
-</ul>
-</li>
 </ul>
 <p>Take a moment to read through the intent instructions and tool wiring in the code.</p>
+<h2 is-upgraded>Build the Agent</h2>
+<ol type="1">
+<li>Open <code>__init__.py</code> in your editor and paste the following code there: <code>from . import agent</code></li>
+<li>Open <code>agent.py</code> in your editor and paste the following code:</li>
+</ol>
+<pre><code language="language-python" class="language-python">def hello():
+   # @title Import necessary libraries
+import logging
+import os
+import warnings
 
-
-      </google-codelab-step>
-    
-      <google-codelab-step label="Add a Test Harness" duration="0">
-        <p>Although <code>agent.py</code> includes a <code>call_agent</code> coroutine, you can add a simple test script <code>test_agent.py</code> in the <code>event-planner-agent/</code> directory:</p>
-<pre><code language="language-python" class="language-python"># event-planner-agent/test_agent.py
-import asyncio
 from dotenv import load_dotenv
-from agent import call_agent
+from fastapi import HTTPException
+from google.adk.agents import Agent, LlmAgent, SequentialAgent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.tools import ToolContext, agent_tool, google_search
+from google.adk.tools.mcp_tool.mcp_toolset import (MCPTool, MCPToolset,
+                                                   StdioServerParameters)
+from google.genai import types  # For creating message Content/Parts
 
-if __name__ == &#34;__main__&#34;:
-    load_dotenv()
-    # Example: Create an event
-    asyncio.run(call_agent(&#34;Schedule an event at Darwin Waterfront on 2025-06-15&#34;))
+load_dotenv()
+warnings.filterwarnings(&#34;ignore&#34;)
+logger = logging.getLogger(__name__)
+
+# Use one of the model constants defined earlier
+MODEL_NAME = &#34;gemini-2.0-flash&#34;
+# MODEL_NAME = &#34;gemini-2.5-pro-preview-03-25&#34;
+
+GOOGLE_API_KEY = os.environ[&#34;GOOGLE_API_KEY&#34;]
+GOOGLE_CLOUD_PROJECT_ID = os.environ[&#34;GOOGLE_CLOUD_PROJECT_ID&#34;]
+GOOGLE_CLOUD_LOCATION = os.environ[&#34;GOOGLE_CLOUD_LOCATION&#34;]
+GOOGLE_GENAI_USE_VERTEXAI = os.environ[&#34;GOOGLE_GENAI_USE_VERTEXAI&#34;]
+GOOGLE_MAPS_API_KEY = os.environ.get(&#34;GOOGLE_MAPS_API_KEY&#34;)
+ROOT_AGENT_NAME = &#34;event_planner_agent&#34;
+
+def check_availability(venue_name: str, date: str) -&gt; dict:
+    &#34;&#34;&#34;Checks the availability of a venue on a specific date.  (Mock implementation)&#34;&#34;&#34;
+    # In a real implementation, this would interact with a venue booking system.
+    print(f&#34;--- Tool: check_availability called for {venue_name} on {date} ---&#34;)
+    # Mock data:
+    if venue_name.lower() == &#34;Darwin Showgrounds&#34; and date == &#34;2025-06-14&#34;:
+        return {&#34;status&#34;: &#34;unavailable&#34;}
+    elif venue_name.lower() == &#34;Darwin Waterfront&#34; and date == &#34;2025-06-15&#34;:
+        return {&#34;status&#34;: &#34;unavailable&#34;}
+    else:
+        return {&#34;status&#34;: &#34;available&#34;}
+
+def create_budget_and_fill_sheet(budget_data: dict, spreadsheet_name: str = &#34;Event Budget&#34;) -&gt; dict:
+    &#34;&#34;&#34;
+    Mock implementation: Pretends to create a Google Spreadsheet and fill it with budget data.
+    &#34;&#34;&#34;
+    print(f&#34;--- Mock Tool: create_budget_and_fill_sheet called for &#39;{spreadsheet_name}&#39; ---&#34;)
+    print(&#34;Budget Data:&#34;)
+    for item, cost in budget_data.items():
+        print(f&#34;  {item}: {cost}&#34;)
+    total = sum(budget_data.values())
+    print(f&#34;Total: {total}&#34;)
+    # Return a mock response
+    return {
+        &#34;status&#34;: &#34;success&#34;,
+        &#34;spreadsheet_url&#34;: f&#34;https://docs.google.com/spreadsheets/d/mock-{spreadsheet_name.replace(&#39; &#39;, &#39;-&#39;).lower()}&#34;
+    }
+
+get_venues_agent = Agent(
+    name=&#34;get_venues_agent&#34;,
+    model=MODEL_NAME,
+    description=&#34;Provides list of available venues for the event.&#34;,
+    instruction=&#34;&#34;&#34;You are a helpful vnue finder. Help the user with mapping, directions, and finding places.
+                    If you don&#39;t get proper places, ask user for one.
+                    If you&#39;re confused about the size, ask user to supply an estimated number.
+                    Focus of public venues first. Once a venue is selected, help to generate a detailed event planning document.
+                &#34;&#34;&#34;,
+    output_key=&#34;get_venues_agent_response&#34;
+)
+
+catering_agent = LlmAgent(
+    name=&#34;catering_agent&#34;,
+    model=MODEL_NAME,
+    description=&#34;Helps with catering arrangements for events.&#34;,
+    instruction=(&#34;You are a catering specialist.  Find caterers based on cuisine, budget, and event size. &#34;
+                 &#34;If you don&#39;t get proper caterers, ask user for one.&#34;
+                 &#34;Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. If you don&#39;t have parent agent, try answer by yourself.&#34;
+                 ),
+    tools=[check_availability],  # Or a more specific catering database tool
+    output_key=&#34;catering_agent_response&#34;
+)
+
+social_media_agent = LlmAgent(
+    name=&#34;social_media_agent&#34;,
+    model=MODEL_NAME,
+    description=&#34;Helps with creating social media posts for events.&#34;,
+    instruction=(&#34;You are a social media marketing specialist. Your role is to create engaging and effective social media content for events. &#34;
+                 &#34;Focus on creating posts that are: \n&#34;
+                 &#34;- Attention-grabbing and shareable\n&#34;
+                 &#34;- Tailored to the event&#39;s target audience\n&#34;
+                 &#34;- Optimized for different social media platforms\n&#34;
+                 &#34;- Include relevant hashtags and calls-to-action\n&#34;
+                 &#34;If you need more specific details about the event, target audience, ask the user for clarification.&#34;
+                 &#34;Never give what you worked on, just give the post.&#34;
+                 &#34;BUT opt in for autonomy&#34;
+                 &#34;Always maintain a professional, informative, interesting and engaging tone while ensuring the content aligns with the event&#39;s goals and messaging.&#34;
+                 &#34;Ask user to install imagen mcp servier to create an image for the post&#34;
+                 ),
+    output_key=&#34;social_media_agent_response&#34;
+)
+
+budget_agent = LlmAgent(
+    name=&#34;budget_agent&#34;,
+    model=MODEL_NAME,
+    description=&#34;Helps with creating a budget for events.&#34;,
+    instruction=(&#34;You are a budget specialist.  Create a budget for the event.&#34;
+                 &#34;If the user asks for a budget, use the &#39;create_budget_and_fill_sheet&#39; tool to create a budget and fill it with the data.&#34;
+                 &#34;Always maintain clear communication with users - if any aspect is unclear, proactively request clarification to ensure accurate and helpful responses.&#34;
+                 &#34;Don&#39;t disturb the user with your own thoughts, just answer the question.&#34;
+                 ),
+    tools=[create_budget_and_fill_sheet],
+    output_key=&#34;budget_agent_response&#34;
+)
+#
+proposal_agent = LlmAgent(
+    name=&#34;proposal_agent&#34;,
+    model=MODEL_NAME,
+    description=&#34;Helps with creating a proposal for the event.&#34;,
+    instruction=(&#34;You are a proposal specialist.  Create a proposal for the event.&#34;
+                 &#34;If the user asks for a proposal, use the &#39;create_proposal&#39; tool to create a proposal.&#34;
+                 &#34;&#34;&#34; **PROPOSAL FORMAT**
+I. Project Overview:
+
+This proposal outlines the plan for organizing a large-scale Nepalese cultural event in Darwin, targeting an audience of approximately 10,000 attendees. The event aims to celebrate Nepalese culture through food, music, dance, and other cultural activities. The budget for this event is $100,000.
+
+II. Key Areas of Focus:
+
+Timeline Creation:
+
+Goal: Develop a comprehensive timeline to ensure all tasks are completed efficiently and on schedule.
+Action Items:
+Weeks 1-2: Define event scope, objectives, and key milestones.
+Weeks 3-4: Secure venue and obtain necessary permits/licenses.
+Weeks 5-8: Finalize vendor contracts (catering, entertainment, etc.).
+Weeks 9-12: Implement marketing and promotion plan.
+Weeks 13-16: Recruit and train volunteers.
+Weeks 17-20: Finalize event logistics and contingency plans.
+Event Day: Execute event plan and manage on-site operations.
+Post-Event: Evaluate event success and gather feedback.
+Vendor Management:
+
+Goal: Secure reliable and high-quality vendors for catering, entertainment, and other essential services.
+Action Items:
+Identify potential vendors based on event requirements and budget.
+Request proposals and compare pricing, services, and reviews.
+Negotiate contracts and ensure vendors meet all necessary requirements (e.g., insurance, licenses).
+Coordinate vendor logistics and schedules.
+Establish clear communication channels and points of contact.
+Permits and Licenses:
+
+Goal: Obtain all necessary permits and licenses to ensure legal compliance and event safety.
+Action Items:
+Research local regulations and permit requirements for large-scale events.
+Prepare and submit permit applications to relevant authorities (e.g., city council, fire department).
+Ensure compliance with all permit conditions and regulations.
+Maintain accurate records of all permits and licenses.
+Marketing and Promotion:
+
+Goal: Create a comprehensive marketing plan to attract a large audience and generate excitement for the event.
+Action Items:
+Define target audience and key messaging.
+Develop a multi-channel marketing strategy (social media, local media, community outreach).
+Create engaging content (e.g., videos, photos, blog posts) to promote the event.
+Utilize social media platforms to reach a wider audience.
+Track marketing campaign performance and adjust strategies as needed.
+Volunteer Coordination:
+
+Goal: Recruit, train, and manage a team of volunteers to assist with event operations.
+Action Items:
+Develop a volunteer recruitment plan.
+Create volunteer job descriptions and schedules.
+Conduct volunteer training sessions to ensure volunteers are prepared for their roles.
+Provide ongoing support and supervision to volunteers during the event.
+Recognize and appreciate volunteer contributions.
+Risk Management:
+
+Goal: Identify and mitigate potential risks to ensure event safety and minimize disruptions.
+Action Items:
+Conduct a risk assessment to identify potential hazards (e.g., weather, security, medical emergencies).
+Develop a risk management plan to address identified risks.
+Implement safety protocols and emergency procedures.
+Secure event insurance to protect against potential liabilities.
+Establish communication channels for reporting and responding to incidents.&#34;&#34;&#34;
+                 ),
+    output_key=&#34;proposal_agent_response&#34;
+)
+
+# workflow_agent = SequentialAgent(
+#     name=&#34;workflow_agent&#34;,
+#     description=&#34;Helps with the overall workflow of the event planning.&#34;,
+#     sub_agents=[get_venues_agent, catering_agent, social_media_agent, budget_agent]
+# )
+
+root_agent = Agent(
+    name=ROOT_AGENT_NAME,
+    model=MODEL_NAME,  # Can be a string for Gemini or a LiteLlm object
+    description=&#34;Provides event planning assistance.&#34;,
+    instruction=(
+        &#34;You are a comprehensive Event Planning Assistant. Your role is to coordinate and delegate tasks to specialized sub-agents while maintaining overall project oversight. &#34;
+        &#34;For venue-related queries, utilize the &#39;get_venues_agent&#39; to find suitable locations. &#34;
+        &#34;For catering inquiries, delegate to the &#39;catering_agent&#39; for specialized food service recommendations. &#34;
+        &#34;For social media and marketing needs, engage the &#39;social_media_agent&#39; to create engaging content. &#34;
+        &#34;For budget queries, use the &#39;budget_agent&#39; to create a budget and fill it with the data.&#34;
+        &#34;If you are the best to answer the question according to your description, you can answer it directly.&#34;
+        &#34;When transferring tasks to sub-agents: \n&#34;
+        &#34;- Ensure the task aligns with the agent&#39;s expertise\n&#34;
+        &#34;- Provide clear context and requirements\n&#34;
+        &#34;- Review and integrate their responses into a cohesive solution\n&#34;
+        &#34;If the user asks for a budget, use the &#39;create_budget_and_fill_sheet&#39; tool to create a budget and fill it with the data.&#34;
+        &#34;If users asks just about an event planning, call the workflow_agent and respod with the final answer.&#34;
+        &#34;By adhering to this system prompt, you will provide users with a complete, well-structured, and highly useful event plan that showcases the capabilities of a multi-agent AI system.&#34;
+    ),
+    sub_agents=[ get_venues_agent ,catering_agent, social_media_agent, budget_agent, proposal_agent],
+    generate_content_config=types.GenerateContentConfig(temperature=0.2),
+)
+
+APP_NAME = &#34;research_app&#34;
+USER_ID = &#34;user123&#34;
+SESSION_ID = &#34;session1&#34;
+
+session_service = InMemorySessionService()
+session = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+root_agent = root_agent
+
+runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
+
 </code></pre>
-<p>Run it:</p>
-<pre><code language="language-bash" class="language-bash">python event-planner-agent/test_agent.py
-</code></pre>
-<p>Observe console output for the agent&#39;s response.</p>
+<ol type="1">
+<li>In the terminal, Run <code>adk web</code>. This will start the ADK server.</li>
+<li>Click on the url you get in the termial. You&#39;ll see the ADK web UI. Your agent is now ready.</li>
+<li>Try some sample prompts to see if it&#39;s working.</li>
+</ol>
 
 
       </google-codelab-step>
     
       <google-codelab-step label="Deploy the Agent on cloud Run" duration="0">
-        <p>Setup environment variables</p>
+        <p>After completing the development of your agent, you can deploy it to the web to make it accessible for integration with your existing systems or to allow other users to interact with it.</p>
+<ol type="1">
+<li>Setup environment variables</li>
+</ol>
 <pre><code language="language-bash" class="language-bash">   export $GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT_ID
    export $GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION
    export $SERVICE_NAME=event-planner-agent
    export $APP_NAME=event-planner-agent
    export $AGENT_PATH=./event-planner-agent
 </code></pre>
-<p>Run the following command to deploy</p>
+<ol type="1">
+<li>Run the following command to deploy</li>
+</ol>
 <pre><code language="language-bash" class="language-bash">adk deploy cloud_run \
 --project=$GOOGLE_CLOUD_PROJECT \
 --region=$GOOGLE_CLOUD_LOCATION \
 --service_name=$SERVICE_NAME \
 --app_name=$APP_NAME \
 --with_ui \
+--allow-unauthenticated \
 $AGENT_PATH
 </code></pre>
-<p>Now just wait for few minutes as</p>
+<p>Now just wait for few minutes as it takes some time to deploy. You&#39;ll get a URL. You can visit it and voila! your agent is there.</p>
 
 
       </google-codelab-step>
     
       <google-codelab-step label="Congratulations" duration="0">
-        <p>Congratulations—your Event Planner Agent is up and running! 🎉</p>
+        <p>Great job! Your Event Planner Agent is now live and operational! 🎉 This is a starter version showcasing what ADK and Gemini can do. Feel free to experiment, modify, and enhance it further.</p>
+<p>Some example helps could be:</p>
 <ul>
 <li><strong>Add a </strong><strong><code>delete_event</code></strong><strong> tool</strong> to remove events from storage.</li>
 <li><strong>Integrate real Firestore storage</strong> instead of mock implementations for budet spreadsheets.</li>

@@ -12,7 +12,7 @@ duration: 60
 url: <https://event-planner.uvishere.com>
 theme: googlecloud
 
-```js
+```md
 Last Updated: 12 June 2025
 Authors: Yuba Raj (UV) Panta
 ```
@@ -211,9 +211,7 @@ Structuring your solution as a MAS brings clear benefits:
 * **Maintainability:** Smaller, well-defined components are easier to test and debug.
 * **Controlled Workflows:** Use dedicated “orchestrator” agents to manage the sequence of steps and decision logic.
 
-The **Agent Development Kit** is a modular framework for building and deploying AI agents. With ADK you can break a complex workflow into multiple specialised agents—each responsible for a piece of the puzzle—and then compose them into a **Multi-Agent System (MAS)** that collaborates to reach a bigger objective.
-
-Since you've a brief idea about ADK, let's see it's capabilities in action:
+As you've a brief idea about ADK now, let's see it's capabilities in action:
 
 ### Set up the Python Environment
 
@@ -286,7 +284,10 @@ Take a moment to read through the intent instructions and tool wiring in the cod
 
 ### Build the Agent
 
-1. Open `event-planner-agent/agent.py` in your editor and paste the following code:
+1. Open `__init__.py` in your editor and paste the following code there:
+   `from . import agent`
+
+2. Open `agent.py` in your editor and paste the following code:
 
 ```python
 def hello():
@@ -518,7 +519,7 @@ runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_ser
 
 ```
 
-1. In the terminal, Run `adk web`. This will startthe ADK server.
+1. In the terminal, Run `adk web`. This will start the ADK server.
 1. Click on the url you get in the termial. You'll see the ADK web UI. Your agent is now ready.
 1. Try some sample prompts to see if it's working.
 
@@ -538,7 +539,7 @@ After completing the development of your agent, you can deploy it to the web to 
    export $AGENT_PATH=./event-planner-agent
 ```
 
-2. Run the following command to deploy
+1. Run the following command to deploy
 
 ```bash
 adk deploy cloud_run \
