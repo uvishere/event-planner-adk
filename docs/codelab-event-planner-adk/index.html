@@ -255,6 +255,7 @@ GOOGLE_GENAI_USE_VERTEXAI=false
 <li><code>catering_agent</code> – an <code>LlmAgent</code> for catering recommendations.</li>
 <li><code>social_media_agent</code> – an <code>LlmAgent</code> to craft social media posts.</li>
 <li><code>budget_agent</code> – an <code>LlmAgent</code> that calls <code>create_budget_and_fill_sheet</code>.</li>
+<li><code>event_proposal_agent</code> - an <code>LlmAgent</code> that generates a comprehensive proposal</li>
 </ul>
 </li>
 </ul>
@@ -264,9 +265,7 @@ GOOGLE_GENAI_USE_VERTEXAI=false
 <li>Open <code>__init__.py</code> in your editor and paste the following code there: <code>from . import agent</code></li>
 <li>Open <code>agent.py</code> in your editor and paste the following code:</li>
 </ol>
-<pre><code language="language-python" class="language-python">def hello():
-   # @title Import necessary libraries
-import logging
+<pre><code language="language-python" class="language-python">import logging
 import os
 import warnings
 
@@ -293,6 +292,7 @@ GOOGLE_CLOUD_PROJECT_ID = os.environ[&#34;GOOGLE_CLOUD_PROJECT_ID&#34;]
 GOOGLE_CLOUD_LOCATION = os.environ[&#34;GOOGLE_CLOUD_LOCATION&#34;]
 GOOGLE_GENAI_USE_VERTEXAI = os.environ[&#34;GOOGLE_GENAI_USE_VERTEXAI&#34;]
 GOOGLE_MAPS_API_KEY = os.environ.get(&#34;GOOGLE_MAPS_API_KEY&#34;)
+
 ROOT_AGENT_NAME = &#34;event_planner_agent&#34;
 
 def check_availability(venue_name: str, date: str) -&gt; dict:
@@ -327,11 +327,14 @@ get_venues_agent = Agent(
     name=&#34;get_venues_agent&#34;,
     model=MODEL_NAME,
     description=&#34;Provides list of available venues for the event.&#34;,
-    instruction=&#34;&#34;&#34;You are a helpful vnue finder. Help the user with mapping, directions, and finding places.
-                    If you don&#39;t get proper places, ask user for one.
-                    If you&#39;re confused about the size, ask user to supply an estimated number.
-                    Focus of public venues first. Once a venue is selected, help to generate a detailed event planning document.
-                &#34;&#34;&#34;,
+    instruction=(
+        f&#34;&#34;&#34;You are a helpful venue finder. Help the user with mapping, directions, and finding places.
+            If you don&#39;t get proper places, ask user for one.
+            If you&#39;re confused about the size, ask user to supply an estimated number.
+            Focus of public venues first. Once a venue is selected, help to generate a detailed event planning document. \n
+            Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
+            Once your job is done, transfer to your parent agent.
+        &#34;&#34;&#34;),
     output_key=&#34;get_venues_agent_response&#34;
 )
 
@@ -339,10 +342,12 @@ catering_agent = LlmAgent(
     name=&#34;catering_agent&#34;,
     model=MODEL_NAME,
     description=&#34;Helps with catering arrangements for events.&#34;,
-    instruction=(&#34;You are a catering specialist.  Find caterers based on cuisine, budget, and event size. &#34;
-                 &#34;If you don&#39;t get proper caterers, ask user for one.&#34;
-                 &#34;Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. If you don&#39;t have parent agent, try answer by yourself.&#34;
-                 ),
+    instruction=(
+        f&#34;&#34;&#34;You are a catering specialist.  Find caterers based on cuisine, budget, and event size.
+            If you don&#39;t get proper caterers, ask user for one.
+            Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
+            Once your job is done, transfer to your parent agent.
+        &#34;&#34;&#34;),
     tools=[check_availability],  # Or a more specific catering database tool
     output_key=&#34;catering_agent_response&#34;
 )
@@ -351,18 +356,21 @@ social_media_agent = LlmAgent(
     name=&#34;social_media_agent&#34;,
     model=MODEL_NAME,
     description=&#34;Helps with creating social media posts for events.&#34;,
-    instruction=(&#34;You are a social media marketing specialist. Your role is to create engaging and effective social media content for events. &#34;
-                 &#34;Focus on creating posts that are: \n&#34;
-                 &#34;- Attention-grabbing and shareable\n&#34;
-                 &#34;- Tailored to the event&#39;s target audience\n&#34;
-                 &#34;- Optimized for different social media platforms\n&#34;
-                 &#34;- Include relevant hashtags and calls-to-action\n&#34;
-                 &#34;If you need more specific details about the event, target audience, ask the user for clarification.&#34;
-                 &#34;Never give what you worked on, just give the post.&#34;
-                 &#34;BUT opt in for autonomy&#34;
-                 &#34;Always maintain a professional, informative, interesting and engaging tone while ensuring the content aligns with the event&#39;s goals and messaging.&#34;
-                 &#34;Ask user to install imagen mcp servier to create an image for the post&#34;
-                 ),
+    instruction=(
+        f&#34;&#34;&#34;You are a social media marketing specialist. Your role is to create engaging and effective social media content for events.
+            Focus on creating posts that are:
+            - Attention-grabbing and shareable
+            - Tailored to the event&#39;s target audience
+            - Optimized for different social media platforms
+            - Include relevant hashtags and calls-to-action
+            If you need more specific details about the event, target audience, assume yourself.
+            Never give what you worked on, just give the post.
+            Opt in for autonomy
+            Always maintain a professional, informative, interesting and engaging tone while ensuring the content aligns with the event&#39;s goals and messaging.
+            Ask user to install imagen mcp servier to create an image for the post
+            Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
+            Once your job is done, transfer to your parent agent.
+        &#34;&#34;&#34;),
     output_key=&#34;social_media_agent_response&#34;
 )
 
@@ -370,85 +378,95 @@ budget_agent = LlmAgent(
     name=&#34;budget_agent&#34;,
     model=MODEL_NAME,
     description=&#34;Helps with creating a budget for events.&#34;,
-    instruction=(&#34;You are a budget specialist.  Create a budget for the event.&#34;
-                 &#34;If the user asks for a budget, use the &#39;create_budget_and_fill_sheet&#39; tool to create a budget and fill it with the data.&#34;
-                 &#34;Always maintain clear communication with users - if any aspect is unclear, proactively request clarification to ensure accurate and helpful responses.&#34;
-                 &#34;Don&#39;t disturb the user with your own thoughts, just answer the question.&#34;
-                 ),
+    instruction=(
+        f&#34;&#34;&#34;You are a budget specialist.  Create a budget for the event.
+            If the user asks for a budget, use the &#39;create_budget_and_fill_sheet&#39; tool to create a budget and fill it with the data.
+            Always maintain clear communication with users - if any aspect is unclear, proactively request clarification to ensure accurate and helpful responses.
+            Don&#39;t disturb the user with your own thoughts, just answer the question.
+            Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. Once your job is done, transfer to your parent agent.
+        &#34;&#34;&#34;),
     tools=[create_budget_and_fill_sheet],
     output_key=&#34;budget_agent_response&#34;
 )
-#
+
 proposal_agent = LlmAgent(
     name=&#34;proposal_agent&#34;,
     model=MODEL_NAME,
     description=&#34;Helps with creating a proposal for the event.&#34;,
-    instruction=(&#34;You are a proposal specialist.  Create a proposal for the event.&#34;
-                 &#34;If the user asks for a proposal, use the &#39;create_proposal&#39; tool to create a proposal.&#34;
-                 &#34;&#34;&#34; **PROPOSAL FORMAT**
-I. Project Overview:
+    instruction=(
+        f&#34;&#34;&#34;You are a proposal specialist.  Create a proposal for the event.
+            Use the proposa format below for reference but feel free to add/remove relevant topics.
+            Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
+            Once your job is done, transfer to your parent agent.
 
-This proposal outlines the plan for organizing a large-scale Nepalese cultural event in Darwin, targeting an audience of approximately 10,000 attendees. The event aims to celebrate Nepalese culture through food, music, dance, and other cultural activities. The budget for this event is $100,000.
+            **PROPOSAL FORMAT START**
+            I. Project Overview:
 
-II. Key Areas of Focus:
+            This proposal outlines the plan for organizing a large-scale cultural event in Darwin, targeting an audience of approximately 10,000 attendees. 
+            The event aims to celebrate culture through food, music, dance, and other cultural activities. 
+            The budget for this event is $100,000.
 
-Timeline Creation:
+            II. Key Areas of Focus:
 
-Goal: Develop a comprehensive timeline to ensure all tasks are completed efficiently and on schedule.
-Action Items:
-Weeks 1-2: Define event scope, objectives, and key milestones.
-Weeks 3-4: Secure venue and obtain necessary permits/licenses.
-Weeks 5-8: Finalize vendor contracts (catering, entertainment, etc.).
-Weeks 9-12: Implement marketing and promotion plan.
-Weeks 13-16: Recruit and train volunteers.
-Weeks 17-20: Finalize event logistics and contingency plans.
-Event Day: Execute event plan and manage on-site operations.
-Post-Event: Evaluate event success and gather feedback.
-Vendor Management:
+            Timeline Creation:
 
-Goal: Secure reliable and high-quality vendors for catering, entertainment, and other essential services.
-Action Items:
-Identify potential vendors based on event requirements and budget.
-Request proposals and compare pricing, services, and reviews.
-Negotiate contracts and ensure vendors meet all necessary requirements (e.g., insurance, licenses).
-Coordinate vendor logistics and schedules.
-Establish clear communication channels and points of contact.
-Permits and Licenses:
+            Goal: Develop a comprehensive timeline to ensure all tasks are completed efficiently and on schedule.
+            Action Items:
+            Weeks 1-2: Define event scope, objectives, and key milestones.
+            Weeks 3-4: Secure venue and obtain necessary permits/licenses.
+            Weeks 5-8: Finalize vendor contracts (catering, entertainment, etc.).
+            Weeks 9-12: Implement marketing and promotion plan.
+            Weeks 13-16: Recruit and train volunteers.
+            Weeks 17-20: Finalize event logistics and contingency plans.
+            Event Day: Execute event plan and manage on-site operations.
+            Post-Event: Evaluate event success and gather feedback.
+            
+            Vendor Management:
+            Goal: Secure reliable and high-quality vendors for catering, entertainment, and other essential services.
+            Action Items:
+            Identify potential vendors based on event requirements and budget.
+            Request proposals and compare pricing, services, and reviews.
+            Negotiate contracts and ensure vendors meet all necessary requirements (e.g., insurance, licenses).
+            Coordinate vendor logistics and schedules.
+            Establish clear communication channels and points of contact.
+            
+            Permits and Licenses:
+            Goal: Obtain all necessary permits and licenses to ensure legal compliance and event safety.
+            Action Items:
+            Research local regulations and permit requirements for large-scale events.x
+            Prepare and submit permit applications to relevant authorities (e.g., city council, fire department).
+            Ensure compliance with all permit conditions and regulations.
+            Maintain accurate records of all permits and licenses.
+            Marketing and Promotion:
 
-Goal: Obtain all necessary permits and licenses to ensure legal compliance and event safety.
-Action Items:
-Research local regulations and permit requirements for large-scale events.
-Prepare and submit permit applications to relevant authorities (e.g., city council, fire department).
-Ensure compliance with all permit conditions and regulations.
-Maintain accurate records of all permits and licenses.
-Marketing and Promotion:
+            Goal: Create a comprehensive marketing plan to attract a large audience and generate excitement for the event.
+            Action Items:
+            Define target audience and key messaging.
+            Develop a multi-channel marketing strategy (social media, local media, community outreach).
+            Create engaging content (e.g., videos, photos, blog posts) to promote the event.
+            Utilize social media platforms to reach a wider audience.
+            Track marketing campaign performance and adjust strategies as needed.
+            
+            Volunteer Coordination:
+            Goal: Recruit, train, and manage a team of volunteers to assist with event operations.
+            Action Items:
+            Develop a volunteer recruitment plan.
+            Create volunteer job descriptions and schedules.
+            Conduct volunteer training sessions to ensure volunteers are prepared for their roles.
+            Provide ongoing support and supervision to volunteers during the event.
+            Recognize and appreciate volunteer contributions.
+            Risk Management:
 
-Goal: Create a comprehensive marketing plan to attract a large audience and generate excitement for the event.
-Action Items:
-Define target audience and key messaging.
-Develop a multi-channel marketing strategy (social media, local media, community outreach).
-Create engaging content (e.g., videos, photos, blog posts) to promote the event.
-Utilize social media platforms to reach a wider audience.
-Track marketing campaign performance and adjust strategies as needed.
-Volunteer Coordination:
-
-Goal: Recruit, train, and manage a team of volunteers to assist with event operations.
-Action Items:
-Develop a volunteer recruitment plan.
-Create volunteer job descriptions and schedules.
-Conduct volunteer training sessions to ensure volunteers are prepared for their roles.
-Provide ongoing support and supervision to volunteers during the event.
-Recognize and appreciate volunteer contributions.
-Risk Management:
-
-Goal: Identify and mitigate potential risks to ensure event safety and minimize disruptions.
-Action Items:
-Conduct a risk assessment to identify potential hazards (e.g., weather, security, medical emergencies).
-Develop a risk management plan to address identified risks.
-Implement safety protocols and emergency procedures.
-Secure event insurance to protect against potential liabilities.
-Establish communication channels for reporting and responding to incidents.&#34;&#34;&#34;
-                 ),
+            Goal: Identify and mitigate potential risks to ensure event safety and minimize disruptions.
+            Action Items:
+            Conduct a risk assessment to identify potential hazards (e.g., weather, security, medical emergencies).
+            Develop a risk management plan to address identified risks.
+            Implement safety protocols and emergency procedures.
+            Secure event insurance to protect against potential liabilities.
+            Establish communication channels for reporting and responding to incidents.
+            **PROPOSAL FORMAT END**
+        &#34;&#34;&#34;
+        ),
     output_key=&#34;proposal_agent_response&#34;
 )
 
@@ -463,34 +481,29 @@ root_agent = Agent(
     model=MODEL_NAME,  # Can be a string for Gemini or a LiteLlm object
     description=&#34;Provides event planning assistance.&#34;,
     instruction=(
-        &#34;You are a comprehensive Event Planning Assistant. Your role is to coordinate and delegate tasks to specialized sub-agents while maintaining overall project oversight. &#34;
-        &#34;For venue-related queries, utilize the &#39;get_venues_agent&#39; to find suitable locations. &#34;
-        &#34;For catering inquiries, delegate to the &#39;catering_agent&#39; for specialized food service recommendations. &#34;
-        &#34;For social media and marketing needs, engage the &#39;social_media_agent&#39; to create engaging content. &#34;
-        &#34;For budget queries, use the &#39;budget_agent&#39; to create a budget and fill it with the data.&#34;
-        &#34;If you are the best to answer the question according to your description, you can answer it directly.&#34;
-        &#34;When transferring tasks to sub-agents: \n&#34;
-        &#34;- Ensure the task aligns with the agent&#39;s expertise\n&#34;
-        &#34;- Provide clear context and requirements\n&#34;
-        &#34;- Review and integrate their responses into a cohesive solution\n&#34;
-        &#34;If the user asks for a budget, use the &#39;create_budget_and_fill_sheet&#39; tool to create a budget and fill it with the data.&#34;
-        &#34;If users asks just about an event planning, call the workflow_agent and respod with the final answer.&#34;
-        &#34;By adhering to this system prompt, you will provide users with a complete, well-structured, and highly useful event plan that showcases the capabilities of a multi-agent AI system.&#34;
+        f&#34;&#34;&#34;
+        You are a comprehensive Event Planning Assistant. Your role is to coordinate and delegate tasks to specialized sub-agents while maintaining overall project oversight.
+        For venue-related queries, utilize the &#39;get_venues_agent&#39; to find suitable locations.
+        For catering inquiries, delegate to the &#39;catering_agent&#39; for specialized food service recommendations.
+        For social media and marketing needs, engage the &#39;social_media_agent&#39; to create engaging content.
+        For budget queries, use the &#39;budget_agent&#39; to create a budget and fill it with the data.
+        For proposal queries, use the &#39;proposal_agent&#39; to create a proposal.
+        If you are the best to answer the question according to your description, you can answer it directly.
+        When transferring tasks to sub-agents:
+        - Ensure the task aligns with the agent&#39;s expertise
+        - Provide clear context and requirements
+        - Review and integrate their responses into a cohesive solution
+        When a user provides an event planning request, you must follow this sequence:
+            Acknowledge the request as the Root Agent and confirm your understanding of the event requirements.
+            Activate each specialized agent in a logical order (e.g., Venue, then Budget, then catering, then social media, then proposal etc.).
+            Present the output of each agent clearly under a specific heading for that agent.
+            Conclude with the full Event Proposal generated by the sub agents, which ties everything together.
+        If users asks to assume all the details, feel free to do so.
+        &#34;&#34;&#34;
     ),
     sub_agents=[ get_venues_agent ,catering_agent, social_media_agent, budget_agent, proposal_agent],
-    generate_content_config=types.GenerateContentConfig(temperature=0.2),
+    generate_content_config=types.GenerateContentConfig(temperature=0.5),
 )
-
-APP_NAME = &#34;research_app&#34;
-USER_ID = &#34;user123&#34;
-SESSION_ID = &#34;session1&#34;
-
-session_service = InMemorySessionService()
-session = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
-root_agent = root_agent
-
-runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
-
 </code></pre>
 <ol type="1">
 <li>In the terminal, Run <code>adk web</code>. This will start the ADK server.</li>
@@ -529,16 +542,11 @@ $AGENT_PATH
 
       </google-codelab-step>
     
-      <google-codelab-step label="Congratulations" duration="0">
-        <p>Great job! Your Event Planner Agent is now live and operational! 🎉 This is a starter version showcasing what ADK and Gemini can do. Feel free to experiment, modify, and enhance it further.</p>
-<p>Some example helps could be:</p>
-<ul>
-<li><strong>Add a </strong><strong><code>delete_event</code></strong><strong> tool</strong> to remove events from storage.</li>
-<li><strong>Integrate real Firestore storage</strong> instead of mock implementations for budet spreadsheets.</li>
-<li><strong>Enhance </strong><strong><code>social_media_agent</code></strong> to generate images via MCPTool.</li>
-<li><strong>Integrate </strong><strong><code>email</code></strong><strong> tool</strong> to email your members/volunteers.</li>
-</ul>
-<p>Feel free to file issues or submit PRs: <a href="https://github.com/uvishere/event-planner-adk/issues/new" target="_blank">https://github.com/uvishere/event-planner-adk/issues/new</a></p>
+      <google-codelab-step label="Congratulations 🎉" duration="0">
+        <p>Great job! Your Event Planner Agent is now live and operational! 🎉 This is a starter version showcasing what ADK and Gemini can do.</p>
+<p class="image-container"><img alt="agent-uicloud-run" src="img/ec8fb6023fa5e00d.png"></p>
+<p>Feel free to experiment, modify, and enhance it further.</p>
+<p>Also if you find any issues with the workshop, please submit an issue or PRs: <a href="https://github.com/uvishere/event-planner-adk/issues/new" target="_blank">https://github.com/uvishere/event-planner-adk/issues/new</a></p>
 
 
       </google-codelab-step>
