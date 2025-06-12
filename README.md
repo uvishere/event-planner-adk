@@ -593,7 +593,11 @@ adk deploy cloud_run \
 $AGENT_PATH
 ```
 
-Now just wait for few minutes as it takes some time to deploy. You'll get a URL. You can visit it and voila! your agent is there.
+Now just wait for few minutes as it takes some time to deploy. You'll get a URL.
+
+![deploy-ui](./assets/deploy-url.png)
+
+You can visit it and voila! your agent is there.
 
 ---
 
