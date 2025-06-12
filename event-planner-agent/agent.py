@@ -69,6 +69,7 @@ get_venues_agent = Agent(
             Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
             Once your job is done, transfer to your parent agent.
         """),
+    tools=[check_availability],
     output_key="get_venues_agent_response"
 )
 
@@ -82,7 +83,6 @@ catering_agent = LlmAgent(
             Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
             Once your job is done, transfer to your parent agent.
         """),
-    tools=[check_availability],  # Or a more specific catering database tool
     output_key="catering_agent_response"
 )
 

@@ -27,8 +27,6 @@ An **agent** is a self-directed program that interacts with an AI model, leverag
 
 But how to build these agents?
 
-### What You’ll Build
-
 In this codelab, you’ll transform our prompt-centric prototype into a fully fledged agent: one that generates a personolised **Event Management plan** for your upcoming event. You’ll learn how to:
 
 1. **Implement** a basic ADK agent that collects your event requirements, transfer calls to it's sub agents and drafts the proposal.
@@ -70,15 +68,31 @@ Jump to **step 4** if you've already created a project and setup the billing/cre
 
 5. **Confirm authentication and project**
 
-   * Run `gcloud auth list` to see your logged-in accounts.
-   * Run `gcloud config list project` to check which project is active.
-   * If it’s not set to your desired project, run: `gcloud config set project YOUR_PROJECT_ID`
+   * Run
 
-6. **Verify Python version**
+      ```bash
+         gcloud auth list
+      ```
+
+       to see your logged-in accounts.
+   * Run
+
+      ```bash
+      gcloud config list project
+      ```
+
+      to check which project is active.
+   * If it’s not set to your desired project, run:
+
+   ```bash
+      gcloud config set project YOUR_PROJECT_ID
+   ```
+
+1. **Verify Python version**
 
    * Make sure you have **Python 3.9+** installed in your Cloud Shell environment (or locally, if you’re developing on your machine).
 
-7. **Further reading**
+2. **Further reading**
 
    * For additional details on `gcloud` commands and usage, see the [Cloud SDK documentation](https://cloud.google.com/sdk/docs).
 
@@ -181,12 +195,12 @@ I want to organise a Birthday party for 30 poeple around Nightcliff. Help me org
 
 You can see how well the plan is generated specific to your need. All by insstructing the LLM written in plain english. Here's the long prompt I used is to demonstrate: *better your prompts, better is your output*. Learning to write better prompt is a skill of today's world.
 
-## Stream Live
+### Stream Live
 
 Next, switch to the **stream** option from your left sidebar.
 let's try to asking by using the mic or even the video button. Try to ask for the same event and see how Gemini responds.
 
-## Generate Media
+### Generate Media
 
 On the left sidebar menu, click **Generate media**
 
@@ -240,24 +254,29 @@ As you've a brief idea about ADK now, let's see it's capabilities in action:
    ```
 
 Create and go inside the directory:
-`mkdir event-planner-agent && cd event-planner-agent`
+
+```bash
+   mkdir event-planner-agent && cd event-planner-agent
+```
 
 create followign empty files
 
-`touch __init__.py agent.py .env`
+```bash
+touch __init__.py agent.py .env
+```
 
 1. **Create a `.env` file in the project root and replace it:**
 
-   ```text
-   GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
-   GOOGLE_CLOUD_PROJECT_ID=YOUR_PROJECT_ID
-   GOOGLE_CLOUD_LOCATION=us-central1  # e.g. us-central1
-   GOOGLE_GENAI_USE_VERTEXAI=false
-   ```
+```text
+GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
+GOOGLE_CLOUD_PROJECT_ID=YOUR_PROJECT_ID
+GOOGLE_CLOUD_LOCATION=us-central1  # e.g. us-central1
+GOOGLE_GENAI_USE_VERTEXAI=false
+```
 
 #### Where to find ->
 
-**Google API Key?**: Go back to the Google AI Studio > Click on Get API Key > Copy > Paste in `YOUR_GOOGLE_API_KEY` section.
+**Google API Key**: Go back to the Google AI Studio > Click on Get API Key > Copy > Paste in `YOUR_GOOGLE_API_KEY` section.
 
 **GOOGLE_CLOUD_PROJECT_ID**: Paste the project id you used during the setup > Copy > Paste in `YOUR_PROJECT_ID` section.
 
@@ -268,7 +287,7 @@ create followign empty files
 ![agent-architecture](./assets/agent-structure.png)
 
 * **Root agent:**
-  * `root_agent` – an `Agent` with all sub-agents registered, delegating tasks based on user requests.
+  * `event_planner_agent` – an `Agent` with all sub-agents registered, delegating tasks based on user requests.
 
 * **Tool implementations** (mock examples):
   * `check_availability(venue_name, date)` – checks venue availability (mocked).
@@ -279,18 +298,22 @@ create followign empty files
   * `catering_agent` – an `LlmAgent` for catering recommendations.
   * `social_media_agent` – an `LlmAgent` to craft social media posts.
   * `budget_agent` – an `LlmAgent` that calls `create_budget_and_fill_sheet`.
-  * `event_proposal_agent` - an `LlmAgent` that generates a comprehensive proposal
+  * `proposal_agent` - an `LlmAgent` that generates a comprehensive proposal
 
 Take a moment to read through the intent instructions and tool wiring in the code.
 
 ### Build the Agent
 
 1. Open `__init__.py` in your editor and paste the following code there:
-   `from . import agent`
+
+   ```python
+   from . import agent
+   ```
 
 2. Open `agent.py` in your editor and paste the following code:
 
 ```python
+# @title Import necessary libraries
 import logging
 import os
 import warnings
@@ -361,6 +384,7 @@ get_venues_agent = Agent(
             Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
             Once your job is done, transfer to your parent agent.
         """),
+    tools=[check_availability],
     output_key="get_venues_agent_response"
 )
 
@@ -374,7 +398,6 @@ catering_agent = LlmAgent(
             Your parent agent is root_agent. If neither the other agents nor you are best for answering the question according to the descriptions, transfer to your parent agent. 
             Once your job is done, transfer to your parent agent.
         """),
-    tools=[check_availability],  # Or a more specific catering database tool
     output_key="catering_agent_response"
 )
 
@@ -532,9 +555,14 @@ root_agent = Agent(
 )
 ```
 
-1. In the terminal, Run `adk web`. This will start the ADK server.
-1. Click on the url you get in the termial. You'll see the ADK web UI. Your agent is now ready.
-1. Try some sample prompts to see if it's working.
+1. In the terminal, Run
+
+   ```adk web```.
+
+   This will start the ADK server.
+
+2. Click on the url you get in the termial. You'll see the ADK web UI. Your agent is now ready.
+3. Try some sample prompts to see if it's working.
 
 ---
 
@@ -578,5 +606,6 @@ This is a starter version showcasing what ADK and Gemini can do.
 
 Feel free to experiment, modify, and enhance it further.
 
+To learn more visit google's [official documentation here](https://google.github.io/adk-docs/get-started/).
 
 Also if you find any issues with the workshop, please submit an issue or PRs: [https://github.com/uvishere/event-planner-adk/issues/new](https://github.com/uvishere/event-planner-adk/issues/new)
