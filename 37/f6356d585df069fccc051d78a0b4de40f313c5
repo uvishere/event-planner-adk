@@ -1,0 +1,23 @@
+event_planner_agent/agent.py
+  ee3f27fb26de6910 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "37f6356d585df069fccc051d78a0b4de40f313c5",
+  "prompts": {
+    "ee3f27fb26de6910": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98ea2b59-2434-4185-87f5-ec5d502993f5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "UV Panta",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 2,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
