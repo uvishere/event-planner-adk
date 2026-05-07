@@ -18,8 +18,7 @@ warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)
 
 # Use one of the model constants defined earlier
-MODEL_NAME = "gemini-2.0-flash"
-# MODEL_NAME = "gemini-2.5-pro-preview-03-25"
+MODEL_NAME = "gemini-2.5-flash"
 
 GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
 GOOGLE_CLOUD_PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT_ID"]
